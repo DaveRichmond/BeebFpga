@@ -1,0 +1,225 @@
+# This is necessary because in two places we have a gated clock
+# The SRAM_nWE is gated with the clock (in bbc_micro_duo)
+# PIN "inst_dcm1/CLK0_BUFG_INST.O" CLOCK_DEDICATED_ROUTE = FALSE;
+
+# 32MHz main clock domain
+NET "clock_32" TNM_NET = clk_period_grp_32;
+TIMESPEC TS_clk_period_32 = PERIOD "clk_period_grp_32" 31.25ns HIGH;
+
+# Help the placer....
+INST inst_dcm1/CLKIN_BUFIO2_INST LOC=BUFIO2_X3Y13;
+
+# 27MHz VGA clock domain
+NET "clock_27" TNM_NET = clk_period_grp_27;
+TIMESPEC TS_clk_period_27 = PERIOD "clk_period_grp_27" 37.04ns HIGH;
+
+# 24MHz SAA5050 clock domain
+NET "clock_24" TNM_NET = clk_period_grp_24;
+TIMESPEC TS_clk_period_24 = PERIOD "clk_period_grp_24" 41.66ns HIGH;
+
+# 12MHz Music 5000 clock domain
+# TODO: This should be a PLL generated clock!
+NET "bbc_micro/ttxt_clken_BUFG" TNM_NET = clk_period_grp_12;
+TIMESPEC TS_clk_period_12 = PERIOD "clk_period_grp_12" 83.33ns HIGH;
+
+# 1MHz SID clock domain
+# TODO: This should be a PLL generated clock!
+NET "bbc_micro/mhz1_clken_BUFG" TNM_NET = clk_period_grp_01;
+TIMESPEC TS_clk_period_01 = PERIOD "clk_period_grp_01" 1000.00ns HIGH;
+
+# Avoid timing warnings for cross domain signals (which are synchronized anyway)
+NET "clock_32"                  TNM_NET = FFS "clk_domain_32";
+NET "clock_27"                  TNM_NET = FFS "clk_domain_27";
+NET "clock_24"                  TNM_NET = FFS "clk_domain_24";
+NET "bbc_micro/ttxt_clken_BUFG" TNM_NET = FFS "clk_domain_12";
+NET "bbc_micro/mhz1_clken_BUFG" TNM_NET = FFS "clk_domain_01";
+
+TIMESPEC "TS_CrossDomain_32_27" = FROM "clk_domain_32" TO "clk_domain_27" TIG;
+TIMESPEC "TS_CrossDomain_32_24" = FROM "clk_domain_32" TO "clk_domain_24" TIG;
+TIMESPEC "TS_CrossDomain_32_12" = FROM "clk_domain_32" TO "clk_domain_12" TIG;
+TIMESPEC "TS_CrossDomain_32_01" = FROM "clk_domain_32" TO "clk_domain_01" TIG;
+TIMESPEC "TS_CrossDomain_12_32" = FROM "clk_domain_12" TO "clk_domain_32" TIG;
+TIMESPEC "TS_CrossDomain_01_32" = FROM "clk_domain_01" TO "clk_domain_32" TIG;
+
+#####################################
+# SRAM Interface - runs at 32MHz
+#####################################
+
+NET SRAM_nOE   OFFSET = OUT 10ns AFTER "clk_32M00";
+NET SRAM_A(18) OFFSET = OUT 10ns AFTER "clk_32M00"; 
+NET SRAM_A(17) OFFSET = OUT 10ns AFTER "clk_32M00"; 
+NET SRAM_A(16) OFFSET = OUT 10ns AFTER "clk_32M00"; 
+NET SRAM_A(15) OFFSET = OUT 10ns AFTER "clk_32M00"; 
+NET SRAM_A(14) OFFSET = OUT 10ns AFTER "clk_32M00"; 
+NET SRAM_A(13) OFFSET = OUT 10ns AFTER "clk_32M00"; 
+NET SRAM_A(12) OFFSET = OUT 10ns AFTER "clk_32M00"; 
+NET SRAM_A(11) OFFSET = OUT 10ns AFTER "clk_32M00"; 
+NET SRAM_A(10) OFFSET = OUT 10ns AFTER "clk_32M00"; 
+NET SRAM_A(9)  OFFSET = OUT 10ns AFTER "clk_32M00"; 
+NET SRAM_A(8)  OFFSET = OUT 10ns AFTER "clk_32M00"; 
+NET SRAM_A(7)  OFFSET = OUT 10ns AFTER "clk_32M00"; 
+NET SRAM_A(6)  OFFSET = OUT 10ns AFTER "clk_32M00"; 
+NET SRAM_A(5)  OFFSET = OUT 10ns AFTER "clk_32M00"; 
+NET SRAM_A(4)  OFFSET = OUT 10ns AFTER "clk_32M00"; 
+NET SRAM_A(3)  OFFSET = OUT 10ns AFTER "clk_32M00"; 
+NET SRAM_A(2)  OFFSET = OUT 10ns AFTER "clk_32M00"; 
+NET SRAM_A(1)  OFFSET = OUT 10ns AFTER "clk_32M00"; 
+NET SRAM_A(0)  OFFSET = OUT 10ns AFTER "clk_32M00"; 
+
+# This is the tightest path
+# SRAM_A Offset + Taccess + PCB + SRAM_D Offset In < 31.25ns
+# 10ns          + 10ns    + 1ns + 10ns             = 31.00ns 
+NET SRAM_D(*)  OFFSET = IN 10ns VALID 10ns BEFORE "clk_32M00";
+
+# SRAM_nWE is driven by an IODDR2 register
+NET SRAM_nWE   OFFSET = OUT  6ns AFTER "clk_32M00" FALLING;
+NET SRAM_nWE   OFFSET = OUT  6ns AFTER "clk_32M00" RISING;
+
+# SRAM_D tristate is driven by an IODDR2 register
+NET SRAM_D(*)  OFFSET = OUT  6ns AFTER  "clk_32M00" FALLING;
+# SRAM_D data includes some fabric logic delays
+NET SRAM_D(*)  OFFSET = OUT 10ns AFTER  "clk_32M00" RISING;
+
+#####################################
+# FLASH Interface runs at 16 MHz
+#####################################
+
+# Times can be somewhat lax, as there are two cycles to do a read
+NET FLASH_CS   OFFSET = OUT            15ns AFTER  "clk_32M00";
+NET FLASH_SI   OFFSET = OUT            15ns AFTER  "clk_32M00";
+NET FLASH_CK   OFFSET = OUT            15ns AFTER  "clk_32M00";
+NET FLASH_SO   OFFSET = IN  15ns VALID 15ns BEFORE "clk_32M00";
+
+#####################################
+# Non critical inputs
+#####################################
+
+NET ps2_kbd_clk   TIG;
+NET ps2_kbd_data  TIG;
+NET ps2_mse_clk   TIG;
+NET ps2_mse_data  TIG;
+NET ERST          TIG;
+NET SDMISO        TIG;
+NET JOYSTICK1(*)  TIG;
+NET JOYSTICK2(*)  TIG;
+NET DIP(*)        TIG;
+NET avr_RxD       TIG;
+NET SW1           TIG;
+
+#####################################
+# Non critical outputs
+#####################################
+
+NET red(*)        TIG;
+NET green(*)      TIG;
+NET blue(*)       TIG;
+NET vsync         TIG;
+NET hsync         TIG;
+NET audioL        TIG;
+NET audioR        TIG;
+NET SDCLK         TIG;
+NET SDMOSI        TIG;
+NET LED1          TIG;
+NET LED2          TIG;
+NET avr_TxD       TIG;
+NET ARDUINO_RESET TIG;
+NET SDSS          TIG;
+
+#####################################
+# Pin placements
+#####################################
+
+NET clk_50M00       LOC="T8"   | IOSTANDARD=LVTTL | DRIVE=2 | SLEW=SLOW; # CLK
+NET ps2_kbd_data    LOC="" | IOSTANDARD=LVTTL | PULLUP ;             # A4
+NET ps2_kbd_clk     LOC="" | IOSTANDARD=LVTTL | PULLUP ;             # A5
+NET SDMISO          LOC="L4" | IOSTANDARD=LVTTL;                       # A2
+NET SDMOSI          LOC="L5" | IOSTANDARD=LVTTL | DRIVE=2 | SLEW=SLOW; # B0
+NET SDCLK           LOC="M3" | IOSTANDARD=LVTTL | DRIVE=2 | SLEW=SLOW; # B1
+NET SDSS            LOC="N3" | IOSTANDARD=LVTTL | DRIVE=2 | SLEW=SLOW; # B2
+NET hsync     	    LOC="M14"  | IOSTANDARD=LVTTL | DRIVE=2 | SLEW=SLOW; # C0
+NET vsync     	    LOC="L13"  | IOSTANDARD=LVTTL | DRIVE=2 | SLEW=SLOW; # C1
+NET blue(0)   	    LOC="P7"  | IOSTANDARD=LVTTL | DRIVE=2 | SLEW=SLOW; # C2
+NET blue(1)   	    LOC="M7"  | IOSTANDARD=LVTTL | DRIVE=2 | SLEW=SLOW; # C5
+NET blue(2)   	    LOC="P8"  | IOSTANDARD=LVTTL | DRIVE=2 | SLEW=SLOW; # C6
+NET blue(3)   	    LOC="N8"  | IOSTANDARD=LVTTL | DRIVE=2 | SLEW=SLOW; # C7
+NET blue(4)   	    LOC="L7"  | IOSTANDARD=LVTTL | DRIVE=2 | SLEW=SLOW; # C7
+NET green(0)  	    LOC="M9"  | IOSTANDARD=LVTTL | DRIVE=2 | SLEW=SLOW; # C8
+NET green(1)  	    LOC="N9"  | IOSTANDARD=LVTTL | DRIVE=2 | SLEW=SLOW; # C9
+NET green(2)  	    LOC="P9"  | IOSTANDARD=LVTTL | DRIVE=2 | SLEW=SLOW; # C10
+NET green(3)  	    LOC="L10"  | IOSTANDARD=LVTTL | DRIVE=2 | SLEW=SLOW; # C11
+NET green(4)  	    LOC="M10"  | IOSTANDARD=LVTTL | DRIVE=2 | SLEW=SLOW; # C11
+NET green(5)  	    LOC="P11"  | IOSTANDARD=LVTTL | DRIVE=2 | SLEW=SLOW; # C11
+NET red(0)          LOC="M11"  | IOSTANDARD=LVTTL | DRIVE=2 | SLEW=SLOW; # C12
+NET red(1)          LOC="M12"  | IOSTANDARD=LVTTL | DRIVE=2 | SLEW=SLOW; # C13
+NET red(2)          LOC="L12"  | IOSTANDARD=LVTTL | DRIVE=2 | SLEW=SLOW; # C14
+NET red(3)          LOC="N14"  | IOSTANDARD=LVTTL | DRIVE=2 | SLEW=SLOW; # C15
+NET red(4)          LOC="M13"  | IOSTANDARD=LVTTL | DRIVE=2 | SLEW=SLOW; # C15
+NET LEDs(0)         LOC="P4"  | IOSTANDARD=LVTTL | DRIVE=2 | SLEW=SLOW; # D12
+NET LEDs(1)         LOC="N5"  | IOSTANDARD=LVTTL | DRIVE=2 | SLEW=SLOW; # D13
+NET LEDs(2)         LOC="P5"  | IOSTANDARD=LVTTL | DRIVE=2 | SLEW=SLOW; # D13
+NET LEDs(3)         LOC="M6"  | IOSTANDARD=LVTTL | DRIVE=2 | SLEW=SLOW; # D13
+
+NET SRAM_A(0)       LOC=""   | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW; # SRAM_ADDR0
+NET SRAM_A(1)       LOC=""   | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW; # SRAM_ADDR1
+NET SRAM_A(2)       LOC=""   | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW; # SRAM_ADDR2
+NET SRAM_A(3)       LOC=""  | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW; # SRAM_ADDR3
+NET SRAM_A(4)       LOC=""  | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW; # SRAM_ADDR4
+NET SRAM_A(5)       LOC=""   | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW; # SRAM_ADDR5
+NET SRAM_A(6)       LOC=""   | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW; # SRAM_ADDR6
+NET SRAM_A(7)       LOC=""   | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW; # SRAM_ADDR7
+NET SRAM_A(8)       LOC="" | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW; # SRAM_ADDR8
+NET SRAM_A(9)       LOC="" | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW; # SRAM_ADDR9
+NET SRAM_A(10)      LOC=""  | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW; # SRAM_ADDR10
+NET SRAM_A(11)      LOC=""  | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW; # SRAM_ADDR11
+NET SRAM_A(12)      LOC=""  | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW; # SRAM_ADDR12
+NET SRAM_A(13)      LOC=""  | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW; # SRAM_ADDR13
+NET SRAM_A(14)      LOC=""  | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW; # SRAM_ADDR14
+NET SRAM_A(15)      LOC=""  | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW; # SRAM_ADDR15
+NET SRAM_A(16)      LOC=""  | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW; # SRAM_ADDR16
+NET SRAM_A(17)      LOC=""  | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW; # SRAM_ADDR17
+NET SRAM_A(18)      LOC=""  | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW; # SRAM_ADDR18
+NET SRAM_D(0)       LOC=""  | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW; # SRAM_DATA0
+NET SRAM_D(1)       LOC=""  | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW; # SRAM_DATA1
+NET SRAM_D(2)       LOC=""  | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW; # SRAM_DATA2
+NET SRAM_D(3)       LOC=""  | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW; # SRAM_DATA3
+NET SRAM_D(4)       LOC=""  | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW; # SRAM_DATA4
+NET SRAM_D(5)       LOC=""  | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW; # SRAM_DATA5
+NET SRAM_D(6)       LOC=""  | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW; # SRAM_DATA6
+NET SRAM_D(7)       LOC=""  | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW; # SRAM_DATA7
+NET SRAM_D(8)       LOC=""  | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW; # SRAM_DATA7
+NET SRAM_D(9)       LOC=""  | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW; # SRAM_DATA7
+NET SRAM_D(10)       LOC=""  | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW; # SRAM_DATA7
+NET SRAM_D(11)       LOC=""  | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW; # SRAM_DATA7
+NET SRAM_D(12)       LOC=""  | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW; # SRAM_DATA7
+NET SRAM_D(13)       LOC=""  | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW; # SRAM_DATA7
+NET SRAM_D(14)       LOC=""  | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW; # SRAM_DATA7
+NET SRAM_D(15)       LOC=""  | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW; # SRAM_DATA7
+NET SRAM_nCS1        LOC=""  | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW; # SRAM_CE
+NET SRAM_nUB        LOC=""  | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW; # SRAM_CE
+NET SRAM_nLB        LOC=""  | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW; # SRAM_CE
+NET SRAM_CS2        LOC=""  | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW; # SRAM_CE
+NET SRAM_nWE        LOC=""   | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW; # SRAM_WE
+NET SRAM_nOE        LOC=""  | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW; # SRAM_OE
+
+NET BUTTONs(0)      LOC="C3" | IOSTANDARD=LVTTL;                       # BUTTON 1
+NET BUTTONs(1)      LOC="D3" | IOSTANDARD=LVTTL;                       # BUTTON 2
+NET BUTTONs(2)      LOC="E4" | IOSTANDARD=LVTTL;                       # BUTTON 3
+NET BUTTONs(3)      LOC="E3" | IOSTANDARD=LVTTL;                       # BUTTON 4
+
+NET FLASH_CS        LOC="T3"  | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW; # FLASH_CS
+NET FLASH_CK        LOC="R11"  | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW; # FLASH_CK
+NET FLASH_SI        LOC="T10"  | IOSTANDARD=LVTTL | DRIVE=8 | SLEW=SLOW; # FLASH_SI
+NET FLASH_SO        LOC="P10"  | IOSTANDARD=LVTTL | PULLUP;              # FLASH_SO
+
+NET AVR_UART_rx     LOC="C11"  | IOSTANDARD=LVTTL;                       # RX
+NET AVR_UART_tx     LOC="D12" | IOSTANDARD=LVTTL | DRIVE=2 | SLEW=SLOW; # TX
+
+#NET DIP<0>          LOC="P111" | IOSTANDARD=LVTTL;                       #
+#NET DIP<1>          LOC="P105" | IOSTANDARD=LVTTL;                       #
+#NET DIP<2>          LOC="P101" | IOSTANDARD=LVTTL;                       #
+#NET DIP<3>          LOC="P100" | IOSTANDARD=LVTTL;                       #
+
+#NET JTAG_TMS        LOC="P107" | IOSTANDARD=LVTTL | DRIVE=2 | SLEW=SLOW; # JTAG_TMS
+#NET JTAG_TCK        LOC="P109" | IOSTANDARD=LVTTL | DRIVE=2 | SLEW=SLOW; # JTAG_TCK
+#NET JTAG_TDI        LOC="P110" | IOSTANDARD=LVTTL | DRIVE=2 | SLEW=SLOW; # JTAG_TDI
+#NET JTAG_TDO        LOC="P106" | IOSTANDARD=LVTTL | DRIVE=2 | SLEW=SLOW; # JTAG_TDO
