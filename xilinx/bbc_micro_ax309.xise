@@ -715,14 +715,11 @@
     <property xil_pn:name="Wait for DCM and PLL Lock (Output Events) spartan6" xil_pn:value="Default (NoWait)" xil_pn:valueState="default"/>
     <property xil_pn:name="Wakeup Clock spartan6" xil_pn:value="Startup Clock" xil_pn:valueState="default"/>
     <property xil_pn:name="Watchdog Timer Value spartan6" xil_pn:value="0xFFFF" xil_pn:valueState="default"/>
-    <property xil_pn:name="Working Directory" xil_pn:value="/home/workspace/BeebFpga/xilinx/working" xil_pn:valueState="non-default"/>
+    <property xil_pn:name="Working Directory" xil_pn:value="working" xil_pn:valueState="non-default"/>
     <property xil_pn:name="Write Timing Constraints" xil_pn:value="false" xil_pn:valueState="default"/>
-    
-<!--                                                                                  -->
-    
-<!-- The following properties are for internal use only. These should not be modified.-->
-    
-<!--                                                                                  -->
+    <!--                                                                                  -->
+    <!-- The following properties are for internal use only. These should not be modified.-->
+    <!--                                                                                  -->
     <property xil_pn:name="PROP_BehavioralSimTop" xil_pn:value="" xil_pn:valueState="default"/>
     <property xil_pn:name="PROP_DesignName" xil_pn:value="bbc_micro_ax309" xil_pn:valueState="non-default"/>
     <property xil_pn:name="PROP_DevFamilyPMName" xil_pn:value="spartan6" xil_pn:valueState="default"/>
@@ -743,20 +740,13 @@
   <libraries/>
 
   <autoManagedFiles>
-    
-<!-- The following files are identified by `include statements in verilog -->
-    
-<!-- source files and are automatically managed by Project Navigator.     -->
-    
-<!--                                                                      -->
-    
-<!-- Do not hand-edit this section, as it will be overwritten when the    -->
-    
-<!-- project is analyzed based on files automatically identified as       -->
-    
-<!-- include files.                                                       -->
+    <!-- The following files are identified by `include statements in verilog -->
+    <!-- source files and are automatically managed by Project Navigator.     -->
+    <!--                                                                      -->
+    <!-- Do not hand-edit this section, as it will be overwritten when the    -->
+    <!-- project is analyzed based on files automatically identified as       -->
+    <!-- include files.                                                       -->
     <file xil_pn:name="../src/common/Tube/gen_flag_v3.v" xil_pn:type="FILE_VERILOG"/>
   </autoManagedFiles>
-
 
 </project>

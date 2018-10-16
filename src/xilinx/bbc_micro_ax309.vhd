@@ -45,7 +45,7 @@ entity bbc_micro_ax309 is
 			SRAM_CS2			: out   std_logic;
 			SRAM_nUB       : out   std_logic;
 			SRAM_nLB       : out   std_logic;
-			SRAM_A         : out   std_logic_vector (18 downto 0);
+			SRAM_A         : out   std_logic_vector (25 downto 0);
 			SRAM_D         : inout std_logic_vector (15 downto 0);
 			SDMISO         : in    std_logic;
 			SDSS           : out   std_logic;
@@ -192,7 +192,7 @@ begin
 	SRAM_nLB <= '0';
 	SRAM_nCS1 <= SRAM_nCS;
 	SRAM_CS2 <= not SRAM_nCS;
-
+	SRAM_A(25 downto 21) <= "00000";
 	
 	--------------------------------------------------------
 	-- BOOTSTRAP SPI FLASH to SRAM
@@ -217,8 +217,7 @@ begin
 		SRAM_nOE        => SRAM_nOE,
 		SRAM_nWE        => SRAM_nWE,
 		SRAM_nCS        => SRAM_nCS,
-		SRAM_A(18 downto 0) => SRAM_A,
-		SRAM_A(20 downto 19) => open,
+		SRAM_A => SRAM_A(20 downto 0),
 		SRAM_D          => SRAM_D(7 downto 0),
 		FLASH_CS        => FLASH_CS,
 		FLASH_SI        => FLASH_SI,
